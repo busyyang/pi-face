@@ -36,6 +36,10 @@ class AppWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def open(self):
         source = self.textEditSource.toPlainText()
+        if source == '':
+            QMessageBox.warning(self, 'Warning', '请填写视频源：\n若为本地摄像头填写0,1,2等数字即可\n'
+                                                 '若为IP相机，请填写rtsp://地址')
+            return
         try:
             source = int(source)
         except Exception as e:
@@ -63,7 +67,9 @@ class AppWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 age = int(age)
             except:
                 age = ''
-            cv2.imencode('.jpg', self.cap.last_frame[rect[1]:rect[3], rect[0]:rect[2]])[1].tofile(
+            crop_img = self.cap.last_frame[rect[1]:rect[3], rect[0]:rect[2]]
+            crop_img = cv2.resize(crop_img, (160, 160))
+            cv2.imencode('.jpg', crop_img)[1].tofile(
                 f'./face_dataset/images/{name}.jpg')
             face_coding = self.fr.cal_encoding(rect, self.cap.last_frame)
             database_sqlite.insert_record('./face_dataset/face_database.db', {
