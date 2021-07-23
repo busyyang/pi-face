@@ -2,3 +2,5 @@
 *.db
 *.xml
 .idea/
+__pycache__/
+model_data/facenet_keras.h5
