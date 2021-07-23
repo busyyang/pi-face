@@ -15,5 +15,14 @@
 4. 打开摄像头，有视屏流后截取图像，输入姓名和年龄信息插入数据库即可。
 5. 数据库准备好以后，打开`face_recongize.py`文件进行人脸识别体验。
 
+### issue
+1. 由于keras, tensorflow以及h5py的版本不匹配问题，可能导致出问题，一下配置方案是测试可用的版本：
+    |配置一||
+    |--|--|
+    |package|version|
+    |Keras|2.3.1|
+    |tensorflow|1.13.1|
+    |h5py|2.9.0|
+
 ### 参考
 1. https://github.com/bubbliiiing/keras-face-recognition
