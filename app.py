@@ -17,10 +17,11 @@ class CameraBufferCleanerThread(threading.Thread):
 
         self.camera = camera
         self.last_frame = None
+        self.running_status = True
         self.start()
 
     def run(self):
-        while True:
+        while self.running_status:
             ret, self.last_frame = self.camera.read()
 
 
@@ -99,8 +100,10 @@ class AppWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 d = ImageQt.ImageQt(img)  # 转化为Qt对象
                 self.label.setPixmap(QPixmap.fromImage(d))
             cv2.waitKey(1)
-        print('跳出while循环')
-        # self.cap.camera.release()
+
+    def closeEvent(self, event):
+        self.cap.running_status = False
+        event.accept()
 
 
 if __name__ == "__main__":

@@ -147,11 +147,12 @@ class CameraBufferCleanerThread(threading.Thread):
         """
         self.camera = camera
         self.last_frame = None
+        self.running_status = True
         super(CameraBufferCleanerThread, self).__init__(name=name)
         self.start()
 
     def run(self):
-        while True:
+        while self.running_status:
             ret, self.last_frame = self.camera.read()
 
 
@@ -174,5 +175,6 @@ if __name__ == "__main__":
                 continue
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-    camera.release()
+    cam_cleaner.running_status = False
+    # camera.release()
     cv2.destroyAllWindows()
