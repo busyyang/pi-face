@@ -101,11 +101,12 @@ sqlite3.register_adapter(np.ndarray, _adapt_array)
 sqlite3.register_converter("ARRAY", _convert_array)
 
 if __name__ == '__main__':
+
+    create_table('./face_database.db')
+    """
     img_res = base64.b64encode(open('images/fang.png', 'rb').read())
 
     coding = np.array([i for i in range(128)])
-    create_table('./face_database.db')
-    """
     insert_record('./face_database.db',
                   {'NAME': 'Defang F.', 'AGE': 28, 'IMAGE': img_res,
                    'ENCODING': coding})

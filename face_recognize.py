@@ -157,7 +157,7 @@ class CameraBufferCleanerThread(threading.Thread):
 
 if __name__ == "__main__":
     fr = FaceRecognisor()
-    camera = cv2.VideoCapture('rtsp://admin:12345@10.66.211.198:8554/live')
+    camera = cv2.VideoCapture(0)
     cam_cleaner = CameraBufferCleanerThread(camera)
     while True:
         t1 = timer()
