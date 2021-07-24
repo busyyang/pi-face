@@ -12,11 +12,14 @@
     - NAME, AGE分别是名字和年龄，年龄可为空
     - IMAGE保存的是160\*160人脸数据的base64字符串
     - ENCODING保存的是128维的编码信息，为numpy ndarray数据格式
+    
     ![database_record](./assert/images/database_record.png)
 4. 在下方的输入框中输入视频源信息，使用默认摄像头输入`0`即可，使用IP摄像头参考`rtsp://admin:12345@192.168.1.123:8554/live`的样式配置。
 5. 打开摄像头，有视屏流后截取图像，输入姓名和年龄信息插入数据库即可。
+
     ![data_insert](./assert/images/data_insert.png)
 6. 数据库准备好以后，打开`face_recongize.py`文件进行人脸识别体验，在1060显卡下的处理速度约为 10 FPS。
+
     ![result](./assert/images/result.png)
 
 ### issue
