@@ -1,6 +1,7 @@
 *.jpg
 *.db
 *.xml
+*.tflite
 .idea/
 __pycache__/
 model_data/facenet_keras.h5
