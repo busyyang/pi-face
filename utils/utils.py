@@ -339,6 +339,30 @@ def calc_128_vec(model, img):
     return pre
 
 
+def calc_128_vec_lite(interpreter, img):
+    """
+    使用tflite的模型进行推理，推理代码中set_tensor和get_tensor里面的数字是通过以下的方式获取的
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+        interpreter.set_tensor(input_details[0]['index'], face_img.astype('float32'))
+        output_data = interpreter.get_tensor(output_details[0]['index'])
+    :param interpreter: tflite 模型对象
+    :param img:
+    :return:
+    """
+    face_img = pre_process(img)
+    # input_details = interpreter.get_input_details()
+    # output_details = interpreter.get_output_details()
+    # interpreter.set_tensor(input_details[0]['index'], face_img.astype('float32'))
+    interpreter.set_tensor(448, face_img.astype('float32'))
+    interpreter.invoke()
+    # output_data = interpreter.get_tensor(output_details[0]['index'])
+    output_data = interpreter.get_tensor(391)
+    pre = l2_normalize(np.concatenate(output_data))
+    pre = np.reshape(pre, [128])
+    return pre
+
+
 # ---------------------------------#
 #   计算人脸距离
 # ---------------------------------#

@@ -7,10 +7,14 @@ from net.inception import InceptionResNetV1
 from timeit import default_timer as timer
 from PIL import Image, ImageFont, ImageDraw
 from face_dataset import database_sqlite
+import tensorflow as tf
+import argparse
 
 
 class FaceRecognisor:
-    def __init__(self):
+    def __init__(self, use_lite_model=True):
+        self.use_lite_model = use_lite_model
+
         # 创建mtcnn对象
         # 检测图片中的人脸
         self.mtcnn_model = mtcnn()
@@ -18,10 +22,15 @@ class FaceRecognisor:
         self.threshold = [0.5, 0.8, 0.9]
         # 载入facenet
         # 将检测到的人脸转化为128维的向量
-        self.facenet_model = InceptionResNetV1()
-        self.facenet_model.summary()
-        model_path = './model_data/facenet_keras.h5'
-        self.facenet_model.load_weights(model_path)
+        if self.use_lite_model:
+            print('Use Tflite model.')
+            model_lite_path = './model_data/facenet_quantize.tflite'
+            self.facenet_model = self.get_facenet_lite(model_lite_path)
+        else:
+            self.facenet_model = InceptionResNetV1()
+            self.facenet_model.summary()
+            model_path = './model_data/facenet_keras.h5'
+            self.facenet_model.load_weights(model_path)
 
         # -----------------------------------------------#
         #   对数据库中的人脸进行编码
@@ -34,6 +43,11 @@ class FaceRecognisor:
         for row in data:
             self.known_face_names.append(row[0])
             self.known_face_encodings.append(row[3])
+
+    def get_facenet_lite(self, path):
+        interpreter = tf.lite.Interpreter(model_path=path)
+        interpreter.allocate_tensors()
+        return interpreter
 
     def face_detect(self, draw):
         """
@@ -77,8 +91,10 @@ class FaceRecognisor:
 
         new_img, _ = utils.Alignment_1(crop_img, landmark)
         new_img = np.expand_dims(new_img, 0)
-
-        face_encoding = utils.calc_128_vec(self.facenet_model, new_img)
+        if self.use_lite_model:
+            face_encoding = utils.calc_128_vec_lite(self.facenet_model, new_img)
+        else:
+            face_encoding = utils.calc_128_vec(self.facenet_model, new_img)
         return face_encoding
 
     def recognize(self, img):
@@ -157,7 +173,12 @@ class CameraBufferCleanerThread(threading.Thread):
 
 
 if __name__ == "__main__":
-    fr = FaceRecognisor()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--use_lite', '-l', action='store_true',
+                        help='set this parameter if use tflite model')
+    args = parser.parse_args()
+
+    fr = FaceRecognisor(args.use_lite)
     camera = cv2.VideoCapture(0)
     cam_cleaner = CameraBufferCleanerThread(camera)
     while True:
