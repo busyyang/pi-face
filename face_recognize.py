@@ -1,3 +1,4 @@
+#-*- coding:utf-8 -*-
 import cv2
 import os, threading
 import numpy as np
@@ -24,7 +25,7 @@ class FaceRecognisor:
         # 将检测到的人脸转化为128维的向量
         if self.use_lite_model:
             print('Use Tflite model.')
-            model_lite_path = './model_data/facenet_quantize.tflite'
+            model_lite_path = './model_data/facenet.tflite'
             self.facenet_model = self.get_facenet_lite(model_lite_path)
         else:
             self.facenet_model = InceptionResNetV1()
