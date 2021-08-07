@@ -6,7 +6,7 @@
 3. 对比特征向量实现人脸识别。
 
 ### 使用
-1. 通过`model_data/download_model.sh`下载`facenet_keras.h5`权重放到`model_data/`文件夹下。
+1. 通过`model_data/download_model.sh`下载`facenet_keras.h5`，`facenet.tflite`和`facenet_quantize.tflite`权重放到`model_data/`文件夹下。
 2. 运行`app.py`代码，通过PyQt录入人脸信息，信息保存在`face_dataset/face_database.db`数据库(sqlite3)中。
 3. 数据库文件可以通过sqlite Expert软件打开，FACE表中一共有4个字段。
     - NAME, AGE分别是名字和年龄，年龄可为空
@@ -18,17 +18,21 @@
 5. 打开摄像头，有视屏流后截取图像，输入姓名和年龄信息插入数据库即可。
 
     ![data_insert](./assert/images/data_insert.png)
-6. 数据库准备好以后，打开`face_recongize.py`文件进行人脸识别体验，在1060显卡下的处理速度约为 10 FPS。
+6. 数据库准备好以后，打开`face_recongize.py`文件进行人脸识别体验，在1060显卡下的处理速度约为 10 FPS。(使用facenet_keras.h5模型，在树莓派上跑不起来)。
 
     ![result](./assert/images/result.png)
+7. 使用tflite模型进行推理的时候，需要使用指令`-l`:
+    ~~~bash
+    python3 face_recongize.py -l
+    ~~~
 
 ### issue
-1. 由于keras, tensorflow以及h5py的版本不匹配问题，可能导致出问题，一下配置方案是测试可用的版本：
+1. 由于keras, tensorflow以及h5py的版本不匹配问题，可能导致出问题，一下配置方案是测试可用的版本(测试过tensorflow==1.13.1在树莓派上加载tflite模型的时候报错)：
     |配置一||
     |--|--|
     |package|version|
     |Keras|2.3.1|
-    |tensorflow|1.13.1|
+    |tensorflow|1.14.0|
     |h5py|2.9.0|
 
 ### 参考
