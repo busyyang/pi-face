@@ -1,4 +1,4 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import cv2
 import os, threading
 import numpy as np
@@ -13,12 +13,12 @@ import argparse
 
 
 class FaceRecognisor:
-    def __init__(self, use_lite_model=True):
+    def __init__(self, use_lite_model=True, use_quantize=True):
         self.use_lite_model = use_lite_model
 
         # 创建mtcnn对象
         # 检测图片中的人脸
-        self.mtcnn_model = mtcnn()
+        self.mtcnn_model = mtcnn(use_lite_model, use_quantize)
         # 门限函数
         self.threshold = [0.5, 0.8, 0.9]
         # 载入facenet
@@ -29,7 +29,7 @@ class FaceRecognisor:
             self.facenet_model = self.get_facenet_lite(model_lite_path)
         else:
             self.facenet_model = InceptionResNetV1()
-            self.facenet_model.summary()
+            # self.facenet_model.summary()
             model_path = './model_data/facenet_keras.h5'
             self.facenet_model.load_weights(model_path)
 
@@ -177,9 +177,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_lite', '-l', action='store_true',
                         help='set this parameter if use tflite model')
+    parser.add_argument('--use_quantize', '-q', action='store_true',
+                        help='use quantize.tflite if set')
     args = parser.parse_args()
 
-    fr = FaceRecognisor(args.use_lite)
+    fr = FaceRecognisor(args.use_lite, args.use_quantize)
     camera = cv2.VideoCapture(0)
     cam_cleaner = CameraBufferCleanerThread(camera)
     while True:

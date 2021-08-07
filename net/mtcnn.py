@@ -112,11 +112,46 @@ def create_Onet(weight_path):
     return model
 
 
+class Net():
+    def __init__(self, lite_model):
+        interpreter = tf.lite.Interpreter(model_path=lite_model)
+        interpreter.allocate_tensors()
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+
+        self.interpreter = interpreter
+        self.input_details = input_details
+        self.output_details = output_details
+
+    def predict(self, input):
+        self.interpreter.resize_tensor_input(self.input_details[0]['index'], input.shape)
+        self.interpreter.allocate_tensors()
+        self.interpreter.set_tensor(self.input_details[0]['index'], input.astype('float32'))
+        self.interpreter.invoke()
+        outputs = []
+        for out_node in self.output_details:
+            outputs.append(self.interpreter.get_tensor(out_node['index']))
+        return outputs
+
+
 class mtcnn():
-    def __init__(self):
-        self.Pnet = create_Pnet('model_data/pnet.h5')
-        self.Rnet = create_Rnet('model_data/rnet.h5')
-        self.Onet = create_Onet('model_data/onet.h5')
+
+    def __init__(self, use_tflite=True, use_quantize=True):
+        if not use_tflite:
+            self.Pnet = create_Pnet('model_data/pnet.h5')
+            self.Rnet = create_Rnet('model_data/rnet.h5')
+            self.Onet = create_Onet('model_data/onet.h5')
+            return
+        if use_quantize:
+            self.Pnet = Net('./model_data/pnet_quantize.tflite')
+            self.Rnet = Net('./model_data/rnet_quantize.tflite')
+            self.Onet = Net('./model_data/onet_quantize.tflite')
+            return
+        else:
+            self.Pnet = Net('./model_data/pnet.tflite')
+            self.Rnet = Net('./model_data/rnet.tflite')
+            self.Onet = Net('./model_data/onet.tflite')
+            return
 
     def detectFace(self, img, threshold):
         # -----------------------------#
