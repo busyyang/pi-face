@@ -68,7 +68,7 @@ class AppWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 age = int(age)
             except:
                 age = ''
-            crop_img = self.cap.last_frame[rect[1]:rect[3], rect[0]:rect[2]]
+            crop_img = self.cap.last_frame[rect[0]:rect[2], rect[1]:rect[3]]
             crop_img = cv2.resize(crop_img, (160, 160))
             cv2.imencode('.jpg', crop_img)[1].tofile(
                 f'./face_dataset/images/{name}.jpg')
@@ -91,8 +91,7 @@ class AppWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 frame = self.cap.last_frame
                 rect, frame_rgb = self.fr.face_detect(frame)
                 if len(rect) > 0:
-                    rect = rect[:, 0:4]
-                    for (left, top, right, bottom) in rect:
+                    for (top, left, bottom, right) in rect:
                         color = (0, 255, 0)
                         cv2.rectangle(frame_rgb, (left, top), (right, bottom), color, 2)
 
