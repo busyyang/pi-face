@@ -3,6 +3,3 @@
 *.xml
 .idea/
 __pycache__/
-model_data/facenet_keras.h5
-model_data/facenet.tflite
-model_data/facenet_quantize.tflite
