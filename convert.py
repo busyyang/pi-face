@@ -1,11 +1,20 @@
 """
 Convert Keras Model(.h5/.hdf5) to Tensorflow(.pb) or TF Lite(.tflite)
-Since the custom_objects should be different by users,
-please check the source code in your project, and comment `from main import custom_objects`
-then load your custom_objects. If custom_objects is not in need, free free to set it as None.
-if no custom_objects in main, it would be set to None as default.
+If custom_objects is not in need, free free to set it as None.
+
+Please notice the quantization options should be modified in different inputs and outputs.
+in `converter.quantized_input_stats = {'layer_name': (mean_value, std_dev_value)}` the map
+function could be: real_input_value = (quantized_input_value - mean_value) / std_dev_value.
+In wide-used range of input, the values could be set as below:
+    - range(0,255): mean=0,std=1
+    - range(-1,1): mean=127.5,std=127.5
+    - range(0,1): mean=0,std=255
+in `converter.default_ranges_stats = (-1, 1)` the range of outputs in real_value, it should
+be set by real output of un-quantization model.
+
 tested on Win10x64, py3.7 with tensorflow 1.14 and keras 2.3.1
-2020/4/29   Jie Y.      Init
+    2020/04/29   Jie Y.     Init
+    2021/08/11   Jie Y.     update code and comments
 usage:  python convert.py models/multi-task-pulsenet.h5 multi-task-pulsenet.tflite
     or: python convert.py models/multi-task-pulsenet.h5 multi-task-pulsenet.pb
 """
@@ -50,12 +59,13 @@ def keras_to_tensorflow(keras_model, output_dir, model_name, out_prefix="output_
             output_dir)
 
 
-def keras_to_tflite(keras_model, output_dir, des_model_name, custom_objects=None, test_mode=True):
+def keras_to_tflite(keras_model, output_dir, des_model_name, custom_objects=None, test_mode=True, quantize=False):
     converter = tf.lite.TFLiteConverter.from_keras_model_file(keras_model, custom_objects=custom_objects)
     # converter.post_training_quantize = True
-    converter.inference_type = tf.uint8
-    converter.quantized_input_stats = {'input_1': (127.5, 127.5)}
-    converter.default_ranges_stats = (-1, 1)
+    if quantize:
+        converter.inference_type = tf.uint8
+        converter.quantized_input_stats = {'input_1': (127.5, 127.5)}
+        converter.default_ranges_stats = (-1, 1)
     tflite_model = converter.convert()
     open(os.path.join(output_dir, des_model_name), "wb").write(tflite_model)
     if test_mode:
@@ -69,7 +79,10 @@ def keras_to_tflite(keras_model, output_dir, des_model_name, custom_objects=None
         for i, _input in enumerate(input_details):
             input_shape = _input['shape']
             print('[{}]input size be:{}\n'.format(i, input_shape))
-            input_data = np.array(np.zeros(input_shape), dtype=np.uint8)
+            if quantize:
+                input_data = np.array(np.zeros(input_shape), dtype=np.uint8)
+            else:
+                input_data = np.array(np.zeros(input_shape), dtype=np.float32)
             interpreter.set_tensor(_input['index'], input_data)
         interpreter.invoke()
 
@@ -82,6 +95,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('src_model_name', type=str, help='path and name of .h5 file')
     parser.add_argument('des_model_name', type=str, help='name of converted model file')
+    parser.add_argument('--quantize', '-l', action='store_true', help='quantize model if set')
 
     args = parser.parse_args()
 
@@ -92,7 +106,7 @@ if __name__ == "__main__":
         output_dir = 'tflite_model'
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        keras_to_tflite(args.src_model_name, output_dir, args.des_model_name, custom_objects)
+        keras_to_tflite(args.src_model_name, output_dir, args.des_model_name, custom_objects, args.quantize)
     elif args.des_model_name.split('.')[-1] == 'pb':
         output_dir = 'tensorflow_model'
         keras_model = load_model(args.src_model_name, custom_objects=custom_objects)
