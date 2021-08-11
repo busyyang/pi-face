@@ -70,8 +70,7 @@ class AppWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 age = ''
             crop_img = self.cap.last_frame[rect[0]:rect[2], rect[1]:rect[3]]
             crop_img = cv2.resize(crop_img, (160, 160))
-            cv2.imencode('.jpg', crop_img)[1].tofile(
-                f'./face_dataset/images/{name}.jpg')
+            cv2.imencode('.jpg', crop_img)[1].tofile(f'./face_dataset/images/{name}.jpg')
             face_coding = self.fr.cal_encoding(rect, self.cap.last_frame)
             database_sqlite.insert_record('./face_dataset/face_database.db', {
                 'NAME': name,
@@ -103,6 +102,7 @@ class AppWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def closeEvent(self, event):
         self.cap.running_status = False
         event.accept()
+        exit(0)
 
 
 if __name__ == "__main__":
