@@ -7,13 +7,14 @@ import utils.utils as utils
 from timeit import default_timer as timer
 from PIL import Image, ImageFont, ImageDraw
 from face_dataset import database_sqlite
+from config import cfg
 
 
 class FaceRecognisor:
     def __init__(self, ):
 
-        self.detect_model = DetectModel('./model_data/ssd_mobilenet_v2_face_quant_postprocess_edgetpu.tflite')
-        self.encoding_model = EncodingModel('./model_data/facenet_quantize_edgetpu.tflite')
+        self.detect_model = DetectModel(cfg.detect_model_path)
+        self.encoding_model = EncodingModel(cfg.encoding_model_path)
         # -----------------------------------------------#
         #   对数据库中的人脸进行编码
         #   known_face_encodings中存储的是编码后的人脸
@@ -21,7 +22,7 @@ class FaceRecognisor:
         # -----------------------------------------------#
         self.known_face_encodings = []
         self.known_face_names = []
-        data = database_sqlite.select_record('./face_dataset/face_database.db')
+        data = database_sqlite.select_record(cfg.face_database_path)
         for row in data:
             self.known_face_names.append(row[0])
             self.known_face_encodings.append(row[3])
@@ -45,9 +46,6 @@ class FaceRecognisor:
         if len(rectangles) == 0:
             return [], draw_rgb
 
-        # 转化成正方形后再返回
-
-        # rectangles = utils.rect2square(np.array(rectangles, dtype=np.int32))
         rectangles = np.array(rectangles)
         rectangles[:, 0] = np.clip(rectangles[:, 0], 0, height)
         rectangles[:, 1] = np.clip(rectangles[:, 1], 0, width)
@@ -64,20 +62,10 @@ class FaceRecognisor:
         :return:
             face_encoding: numpy array, encoding with 128 elements
         """
-        """
-        landmark = (np.reshape(rectangle[5:15], (5, 2)) - np.array([int(rectangle[0]), int(rectangle[1])])) / (
-                rectangle[3] - rectangle[1]) * 160
-        """
-        try:
-            crop_img = draw_rgb[int(rectangle[0]):int(rectangle[2]), int(rectangle[1]):int(rectangle[3])]
-            crop_img = cv2.resize(crop_img, (160, 160))
-        except Exception as e:
-            print(rectangle)
-            exit('-2')
+        crop_img = draw_rgb[int(rectangle[0]):int(rectangle[2]), int(rectangle[1]):int(rectangle[3])]
+        crop_img = cv2.resize(crop_img, (160, 160))
 
-        # new_img, _ = utils.Alignment_1(crop_img, landmark)
-        # new_img = np.expand_dims(new_img, 0)
-        face_encoding = self.encoding_model.predict(crop_img)
+        face_encoding = self.encoding_model.predict(crop_img)[0]
         return face_encoding
 
     def recognize(self, img):
@@ -100,7 +88,7 @@ class FaceRecognisor:
         face_names = []
         for face_encoding in face_encodings:
             # 取出一张脸并与数据库中所有的人脸进行对比，计算得分
-            matches = utils.compare_faces(self.known_face_encodings, face_encoding, tolerance=30)
+            matches = utils.compare_faces(self.known_face_encodings, face_encoding, tolerance=cfg.detect_face_threshold)
             name = "Unknown"
             # 找出距离最近的人脸
             face_distances = utils.face_distance(self.known_face_encodings, face_encoding)
@@ -145,17 +133,25 @@ class CameraBufferCleanerThread(threading.Thread):
         self.camera = camera
         self.last_frame = None
         self.running_status = True
+        self.fail_time = 0  # 记录获取画面失败的次数
         super(CameraBufferCleanerThread, self).__init__(name=name)
         self.start()
 
     def run(self):
         while self.running_status:
             ret, self.last_frame = self.camera.read()
+            if not ret:
+                self.fail_time += 1
+            else:
+                self.fail_time = 0
+            if self.fail_time > 10:
+                print('无法打开视频源......')
+                break
 
 
 if __name__ == "__main__":
     fr = FaceRecognisor()
-    camera = cv2.VideoCapture('rtsp://admin:12345@10.66.211.11:8554/live')
+    camera = cv2.VideoCapture(cfg.video_source)
     cam_cleaner = CameraBufferCleanerThread(camera)
     while True:
         t1 = timer()
