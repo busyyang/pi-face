@@ -52,7 +52,10 @@ def keras_to_tensorflow(keras_model, output_dir, model_name, out_prefix="output_
 
 def keras_to_tflite(keras_model, output_dir, des_model_name, custom_objects=None, test_mode=True):
     converter = tf.lite.TFLiteConverter.from_keras_model_file(keras_model, custom_objects=custom_objects)
-    converter.post_training_quantize = True
+    # converter.post_training_quantize = True
+    converter.inference_type = tf.uint8
+    converter.quantized_input_stats = {'input_1': (127.5, 127.5)}
+    converter.default_ranges_stats = (-1, 1)
     tflite_model = converter.convert()
     open(os.path.join(output_dir, des_model_name), "wb").write(tflite_model)
     if test_mode:
@@ -66,7 +69,7 @@ def keras_to_tflite(keras_model, output_dir, des_model_name, custom_objects=None
         for i, _input in enumerate(input_details):
             input_shape = _input['shape']
             print('[{}]input size be:{}\n'.format(i, input_shape))
-            input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
+            input_data = np.array(np.zeros(input_shape), dtype=np.uint8)
             interpreter.set_tensor(_input['index'], input_data)
         interpreter.invoke()
 
