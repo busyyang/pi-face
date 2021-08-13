@@ -1,20 +1,34 @@
 # encoding: utf-8
 import tflite_runtime.interpreter as tflite
-import cv2
+import cv2, platform
 import numpy as np
+
+EDGETPU_SHARED_LIB = {
+    'Linux': 'libedgetpu.so.1',
+    'Darwin': 'libedgetpu.1.dylib',
+    'Windows': 'edgetpu.dll'
+}[platform.system()]
 
 
 class Net():
-    def __init__(self, lite_model):
+    def __init__(self, lite_model, use_tpu):
         """
         从文件创建一个tflite.Interpreter对象
         NOTICE: 需要继承该类重写predict函数，否则推理部分无输出
         2021-08-11  Jie Y.  Init
         Args:
             lite_model: str, the path and filename of tpu model
+            use_tpu: str, use tpu device if you have
         """
-        interpreter = tflite.Interpreter(model_path=lite_model,
-                                         experimental_delegates=[tflite.load_delegate('edgetpu.dll')])
+        if use_tpu:
+            try:
+                interpreter = tflite.Interpreter(model_path=lite_model,
+                                                 experimental_delegates=[tflite.load_delegate(EDGETPU_SHARED_LIB)])
+            except Exception as e:
+                print("Can't load `{}` model to tpu. Please try to run without tpu.".format(lite_model))
+                exit(-2)
+        else:
+            interpreter = tflite.Interpreter(model_path=lite_model)
         interpreter.allocate_tensors()
         input_details = interpreter.get_input_details()
         output_details = interpreter.get_output_details()
