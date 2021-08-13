@@ -8,7 +8,7 @@ import sys, cv2, threading
 from PIL import Image, ImageQt
 from face_recognize import FaceRecognisor
 from face_dataset import database_sqlite
-import base64
+import base64, argparse
 
 
 class CameraBufferCleanerThread(threading.Thread):
@@ -26,14 +26,14 @@ class CameraBufferCleanerThread(threading.Thread):
 
 
 class AppWindow(QtWidgets.QMainWindow, Ui_MainWindow):
-    def __init__(self, parent=None):
+    def __init__(self, use_tpu, parent=None):
         super(AppWindow, self).__init__(parent)
         self.setupUi(self)
         self.pbSaveImage.clicked.connect(self.saveImage)
         self.pbInsert.clicked.connect(self.insertDatabase)
         self.pbOpen.clicked.connect(self.open)
         self.save_mode = False
-        self.fr = FaceRecognisor()
+        self.fr = FaceRecognisor(use_tpu)
 
     def open(self):
         source = self.textEditSource.toPlainText()
@@ -106,8 +106,15 @@ class AppWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('--help', '-h', action='help',
+                        help='run face detection and recognition on raspberry pi.')
+    parser.add_argument('--use_tpu', '-t', action='store_true',
+                        help='use tpu device if you have.')
+    args = parser.parse_args()
+
     app = QApplication(sys.argv)
-    win = AppWindow()
+    win = AppWindow(args.use_tpu)
     win.show()
     sys.exit(app.exec_())
 
