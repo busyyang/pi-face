@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 import cv2
-import os, threading
+import os, threading, argparse
 import numpy as np
 from net.models import DetectModel, EncodingModel
 import utils.utils as utils
@@ -11,10 +11,13 @@ from config import cfg
 
 
 class FaceRecognisor:
-    def __init__(self, ):
-
-        self.detect_model = DetectModel(cfg.detect_model_path)
-        self.encoding_model = EncodingModel(cfg.encoding_model_path)
+    def __init__(self, use_tpu):
+        if use_tpu:
+            self.detect_model = DetectModel(cfg.detect_model_path_tpu, use_tpu)
+            self.encoding_model = EncodingModel(cfg.encoding_model_path_tpu, use_tpu)
+        else:
+            self.detect_model = DetectModel(cfg.detect_model_path, use_tpu)
+            self.encoding_model = EncodingModel(cfg.encoding_model_path, use_tpu)
         # -----------------------------------------------#
         #   对数据库中的人脸进行编码
         #   known_face_encodings中存储的是编码后的人脸
@@ -150,7 +153,14 @@ class CameraBufferCleanerThread(threading.Thread):
 
 
 if __name__ == "__main__":
-    fr = FaceRecognisor()
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('--help', '-h', action='help',
+                        help='run face detection and recognition on raspberry pi.')
+    parser.add_argument('--use_tpu', '-t', action='store_true',
+                        help='use tpu device if you have.')
+    args = parser.parse_args()
+
+    fr = FaceRecognisor(args.use_tpu)
     camera = cv2.VideoCapture(cfg.video_source)
     cam_cleaner = CameraBufferCleanerThread(camera)
     while True:
