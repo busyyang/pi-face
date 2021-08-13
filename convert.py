@@ -106,7 +106,7 @@ if __name__ == "__main__":
         output_dir = 'tflite_model'
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        keras_to_tflite(args.src_model_name, output_dir, args.des_model_name, custom_objects, args.quantize)
+        keras_to_tflite(args.src_model_name, output_dir, args.des_model_name, custom_objects, quantize=args.quantize)
     elif args.des_model_name.split('.')[-1] == 'pb':
         output_dir = 'tensorflow_model'
         keras_model = load_model(args.src_model_name, custom_objects=custom_objects)
