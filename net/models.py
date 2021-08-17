@@ -24,6 +24,7 @@ class Net():
             try:
                 interpreter = tflite.Interpreter(model_path=lite_model,
                                                  experimental_delegates=[tflite.load_delegate(EDGETPU_SHARED_LIB)])
+                print('Load model {} to TPU device'.format(lite_model))
             except Exception as e:
                 print("Can't load `{}` model to tpu. Please try to run without tpu.".format(lite_model))
                 exit(-2)

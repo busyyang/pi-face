@@ -12,12 +12,9 @@ from config import cfg
 
 class FaceRecognisor:
     def __init__(self, use_tpu):
-        if use_tpu:
-            self.detect_model = DetectModel(cfg.detect_model_path_tpu, use_tpu)
-            self.encoding_model = EncodingModel(cfg.encoding_model_path_tpu, use_tpu)
-        else:
-            self.detect_model = DetectModel(cfg.detect_model_path, use_tpu)
-            self.encoding_model = EncodingModel(cfg.encoding_model_path, use_tpu)
+        self.detect_model = DetectModel(cfg.detect_model_path_tpu, use_tpu)
+        self.encoding_model = EncodingModel(cfg.encoding_model_path_tpu, use_tpu)
+
         # -----------------------------------------------#
         #   对数据库中的人脸进行编码
         #   known_face_encodings中存储的是编码后的人脸
