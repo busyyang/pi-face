@@ -11,10 +11,9 @@ from config import cfg
 
 
 class FaceRecognisor:
-    def __init__(self, use_tpu):
+    def __init__(self, use_tpu, use_encoding):
         self.detect_model = DetectModel(cfg.detect_model_path_tpu, use_tpu)
-        self.encoding_model = EncodingModel(cfg.encoding_model_path_tpu, use_tpu)
-
+        self.use_encoding = use_encoding
         # -----------------------------------------------#
         #   对数据库中的人脸进行编码
         #   known_face_encodings中存储的是编码后的人脸
@@ -22,10 +21,13 @@ class FaceRecognisor:
         # -----------------------------------------------#
         self.known_face_encodings = []
         self.known_face_names = []
-        data = database_sqlite.select_record(cfg.face_database_path)
-        for row in data:
-            self.known_face_names.append(row[0])
-            self.known_face_encodings.append(row[3])
+        if use_encoding:
+            self.encoding_model = EncodingModel(cfg.encoding_model_path_tpu, use_tpu)
+
+            data = database_sqlite.select_record(cfg.face_database_path)
+            for row in data:
+                self.known_face_names.append(row[0])
+                self.known_face_encodings.append(row[3])
 
     def face_detect(self, draw):
         """
@@ -79,24 +81,27 @@ class FaceRecognisor:
         # -----------------------------------------------#
         #   对检测到的人脸进行编码
         # -----------------------------------------------#
+        if self.use_encoding:
+            face_encodings = []
+            for rectangle in rectangles:
+                face_encoding = self.cal_encoding(rectangle, draw_rgb)
+                face_encodings.append(face_encoding)
 
-        face_encodings = []
-        for rectangle in rectangles:
-            face_encoding = self.cal_encoding(rectangle, draw_rgb)
-            face_encodings.append(face_encoding)
-
-        face_names = []
-        for face_encoding in face_encodings:
-            # 取出一张脸并与数据库中所有的人脸进行对比，计算得分
-            matches = utils.compare_faces(self.known_face_encodings, face_encoding, tolerance=cfg.detect_face_threshold)
-            name = "Unknown"
-            # 找出距离最近的人脸
-            face_distances = utils.face_distance(self.known_face_encodings, face_encoding)
-            # 取出这个最近人脸的评分
-            best_match_index = np.argmin(face_distances)
-            if matches[best_match_index]:
-                name = self.known_face_names[best_match_index]
-            face_names.append(name)
+            face_names = []
+            for face_encoding in face_encodings:
+                # 取出一张脸并与数据库中所有的人脸进行对比，计算得分
+                matches = utils.compare_faces(self.known_face_encodings, face_encoding,
+                                              tolerance=cfg.detect_face_threshold)
+                name = "Unknown"
+                # 找出距离最近的人脸
+                face_distances = utils.face_distance(self.known_face_encodings, face_encoding)
+                # 取出这个最近人脸的评分
+                best_match_index = np.argmin(face_distances)
+                if matches[best_match_index]:
+                    name = self.known_face_names[best_match_index]
+                face_names.append(name)
+        else:
+            name = ""
         # -----------------------------------------------#
         #   画框~!~
         # -----------------------------------------------#
@@ -108,7 +113,7 @@ class FaceRecognisor:
         img = Image.fromarray(img)
         for (top, left, bottom, right) in rectangles:
             draw = ImageDraw.Draw(img)
-            if name in self.known_face_names:
+            if name in self.known_face_names or name == "":
                 color = (0, 255, 0)
                 label = 'Name:{}'.format(name)
                 names.append(name)
@@ -146,6 +151,7 @@ class CameraBufferCleanerThread(threading.Thread):
                 self.fail_time = 0
             if self.fail_time > 10:
                 print('无法打开视频源......')
+                self.running_status = False
                 break
 
 
@@ -155,9 +161,11 @@ if __name__ == "__main__":
                         help='run face detection and recognition on raspberry pi.')
     parser.add_argument('--use_tpu', '-t', action='store_true',
                         help='use tpu device if you have.')
+    parser.add_argument('--use_encoding', '-e', action='store_true',
+                        help='use encoding part, bad performance if on Raspberry PI')
     args = parser.parse_args()
 
-    fr = FaceRecognisor(args.use_tpu)
+    fr = FaceRecognisor(args.use_tpu, args.use_encoding)
     camera = cv2.VideoCapture(cfg.video_source)
     cam_cleaner = CameraBufferCleanerThread(camera)
     while True:
@@ -175,6 +183,7 @@ if __name__ == "__main__":
                 continue
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+            if not cam_cleaner.running_status:
+                break
     cam_cleaner.running_status = False
-    # camera.release()
     cv2.destroyAllWindows()

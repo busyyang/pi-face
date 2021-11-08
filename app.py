@@ -26,14 +26,14 @@ class CameraBufferCleanerThread(threading.Thread):
 
 
 class AppWindow(QtWidgets.QMainWindow, Ui_MainWindow):
-    def __init__(self, use_tpu, parent=None):
+    def __init__(self, use_tpu, use_encoding, parent=None):
         super(AppWindow, self).__init__(parent)
         self.setupUi(self)
         self.pbSaveImage.clicked.connect(self.saveImage)
         self.pbInsert.clicked.connect(self.insertDatabase)
         self.pbOpen.clicked.connect(self.open)
         self.save_mode = False
-        self.fr = FaceRecognisor(use_tpu)
+        self.fr = FaceRecognisor(use_tpu, use_encoding)
 
     def open(self):
         source = self.textEditSource.toPlainText()
@@ -111,6 +111,8 @@ if __name__ == "__main__":
                         help='run face detection and recognition on raspberry pi.')
     parser.add_argument('--use_tpu', '-t', action='store_true',
                         help='use tpu device if you have.')
+    parser.add_argument('--use_encoding', '-e', action='store_true',
+                        help='use encoding part, bad performance if on Raspberry PI')
     args = parser.parse_args()
 
     app = QApplication(sys.argv)

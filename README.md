@@ -10,7 +10,7 @@
 请参考[Coral.ai](https://coral.ai/software/#edgetpu-runtime)安装edgetpu_runtime, tflite_runtime, pycoral.
 
 ### 使用
-1. 运行`python app.py -t`代码，通过PyQt录入人脸信息，信息保存在`face_dataset/face_database.db`数据库(sqlite3)中。参数`-t`表示使用tpu进行计算，需要插上一个TPU设备，如果没有的话，会报错。可尝试不带参数运行，但是FPS非常低。
+1. 运行`python app.py -t -e`代码，通过PyQt录入人脸信息，信息保存在`face_dataset/face_database.db`数据库(sqlite3)中。参数`-t`表示使用tpu进行计算，需要插上一个TPU设备，如果没有的话，会报错。可尝试不带参数运行，但是FPS非常低。参数`-e`表示需要使用encoding模型。
 2. 数据库文件可以通过sqlite Expert软件打开，FACE表中一共有4个字段。
     - NAME, AGE分别是名字和年龄，年龄可为空
     - IMAGE保存的是160\*160人脸数据的base64字符串
@@ -21,9 +21,22 @@
 4. 打开摄像头，有视屏流后截取图像，输入姓名和年龄信息插入数据库即可。
 
     ![data_insert](./assert/images/data_insert.png)
-5. 数据库准备好以后，运行`python face_recongize.py -t`文件进行人脸识别体验。
+5. 数据库准备好以后，运行`python face_recongize.py -t -e`文件进行人脸识别体验。
 
     ![result](./assert/images/result.png)
+
+6. 当只使用人脸检测模型，不人脸识别的话，可不带参数`-e`:
+    ~~~
+    python face_recongize.py -t
+    ~~~
+
+### Performence
+在计算机上以及RPI上分别测试，
+|OS|Desc.|only face_detect|detect and recognise|
+|--|--|--|--|
+|PC|i7-7700 with Coral TPU|130 FPS|13 FPS|
+|RPI|-|||
+
 
 ### issue
 1. 在转换tflite模型的时候，由于keras, tensorflow以及h5py的版本不匹配问题，可能导致出问题，一下配置方案是测试可用的版本(测试过tensorflow==1.13.1在树莓派上加载tflite模型的时候报错)：
