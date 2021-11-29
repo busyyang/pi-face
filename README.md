@@ -5,6 +5,7 @@
 2. 使用facenet模型，将人脸数据转化为128维的特征向量。
 3. 对比特征向量实现人脸识别。
 4. 使用_edgetpu.tflite模型需要使用到Google TPU设备（如Coral USB加速器），在树莓派+TPU的组合上，能进行到约14 FPS的速度。
+5. 模型来源：检测人脸的SSD模型来自于[Coral.ai](https://coral.ai/models/all/)，facenet模型来自于[bubbliiiing/facenet-keras](https://github.com/bubbliiiing/facenet-keras/tree/main/model_data)，这个只是权重文件，需要将整个模型文件保存下来，通过`convert.py`转换为tflite模型，然后使用[Edge TPU Compiler](https://colab.research.google.com/github/google-coral/tutorials/blob/master/compile_for_edgetpu.ipynb)转化为TPU加速的模型文件。
 
 ### 安装
 请参考[Coral.ai](https://coral.ai/software/#edgetpu-runtime)安装edgetpu_runtime, tflite_runtime, pycoral.
