@@ -17,6 +17,7 @@ tested on Win10x64, py3.7 with tensorflow 1.14 and keras 2.3.1
     2021/08/11   Jie Y.     update code and comments
 usage:  python convert.py models/multi-task-pulsenet.h5 multi-task-pulsenet.tflite
     or: python convert.py models/multi-task-pulsenet.h5 multi-task-pulsenet.pb
+        python convert.py model_data/mobilenet_face_160.h5 mobilenet_face_160_quant.tflite -l
 """
 
 import tensorflow as tf
@@ -27,6 +28,8 @@ import argparse
 import numpy as np
 
 custom_objects = None
+# if convert mobilenet_face_160 please use:
+custom_objects = {'relu6': lambda x: K.relu(x, max_value=6)}
 
 K.set_learning_phase(0)
 
@@ -64,8 +67,8 @@ def keras_to_tflite(keras_model, output_dir, des_model_name, custom_objects=None
     # converter.post_training_quantize = True
     if quantize:
         converter.inference_type = tf.uint8
-        converter.quantized_input_stats = {'input_1': (127.5, 127.5)}
-        converter.default_ranges_stats = (-1, 1)
+        converter.quantized_input_stats = {'input_1': (0, 255)}  # (127.5, 127.5)
+        converter.default_ranges_stats = (0, 1)  # (-1, 1)
     tflite_model = converter.convert()
     open(os.path.join(output_dir, des_model_name), "wb").write(tflite_model)
     if test_mode:
