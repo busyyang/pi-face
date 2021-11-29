@@ -116,7 +116,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     app = QApplication(sys.argv)
-    win = AppWindow(args.use_tpu)
+    win = AppWindow(args.use_tpu, args.use_encoding)
     win.show()
     sys.exit(app.exec_())
 
