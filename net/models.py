@@ -11,22 +11,23 @@ EDGETPU_SHARED_LIB = {
 
 
 class Net():
-    def __init__(self, lite_model, use_tpu):
+    def __init__(self, lite_model_tpu, lite_model, use_tpu):
         """
         从文件创建一个tflite.Interpreter对象
         NOTICE: 需要继承该类重写predict函数，否则推理部分无输出
         2021-08-11  Jie Y.  Init
         Args:
-            lite_model: str, the path and filename of tpu model
+            lite_model_tpu: str, the path and filebame of tpu model
+            lite_model: str, the path and filename of tflite model
             use_tpu: str, use tpu device if you have
         """
         if use_tpu:
             try:
-                interpreter = tflite.Interpreter(model_path=lite_model,
+                interpreter = tflite.Interpreter(model_path=lite_model_tpu,
                                                  experimental_delegates=[tflite.load_delegate(EDGETPU_SHARED_LIB)])
-                print('Load model {} to TPU device'.format(lite_model))
+                print('Load model {} to TPU device'.format(lite_model_tpu))
             except Exception as e:
-                print("Can't load `{}` model to tpu. Please try to run without tpu.".format(lite_model))
+                print("Can't load `{}` model to tpu. Please try to run without tpu.".format(lite_model_tpu))
                 exit(-2)
         else:
             interpreter = tflite.Interpreter(model_path=lite_model)

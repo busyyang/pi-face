@@ -12,7 +12,7 @@ from config import cfg
 
 class FaceRecognisor:
     def __init__(self, use_tpu, use_encoding):
-        self.detect_model = DetectModel(cfg.detect_model_path_tpu, use_tpu)
+        self.detect_model = DetectModel(cfg.detect_model_path_tpu, cfg.detect_model_path, use_tpu)
         self.use_encoding = use_encoding
         # -----------------------------------------------#
         #   对数据库中的人脸进行编码
@@ -22,7 +22,7 @@ class FaceRecognisor:
         self.known_face_encodings = []
         self.known_face_names = []
         if use_encoding:
-            self.encoding_model = EncodingModel(cfg.encoding_model_path_tpu, use_tpu)
+            self.encoding_model = EncodingModel(cfg.encoding_model_path_tpu, cfg.encoding_model_path, use_tpu)
 
             data = database_sqlite.select_record(cfg.face_database_path)
             for row in data:
