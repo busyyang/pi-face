@@ -34,7 +34,7 @@
 在计算机上以及RPI上分别测试，
 |OS|Desc.|only face_detect|detect and recognise|
 |--|--|--|--|
-|PC|i7-7700 with Coral TPU|130 FPS|13 FPS|
+|PC|i7-7700 with Coral TPU|130 FPS|31 FPS|
 |RPI|-|||
 
 
