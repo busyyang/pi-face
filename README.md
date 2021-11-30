@@ -36,7 +36,7 @@
 |OS|Desc.|only face_detect|detect and recognise|
 |--|--|--|--|
 |PC|i7-7700 with Coral TPU|130 FPS|31 FPS|
-|RPI|-|||
+|RPI|-|10 FPS|1.8 FPS|
 
 
 ### issue
